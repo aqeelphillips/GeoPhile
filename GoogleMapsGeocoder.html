@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      * {
+        font-family: Roboto;
+        font-weight: 300;
+      }
+      body {
+        background-color: #E2EEFB;
+      }
+      h3, h6 {
+        padding: 0;
+        margin: 0;
+      }
+      div.form {
+        margin: 10px;
+      }
+      #map-canvas { 
+        height: 500px; 
+        width: 700px; 
+        margin: 5px; 
+        padding: 5px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+      #loc-entry, #file-entry, #upload {  
+        text-align: center;
+        padding: 5px;
+      }
+      #address {
+        background-color: #fff;
+        width: 400px;
+        text-overflow: ellipsis;
+        text-align: center;
+        padding: 0 11px 0 13px;
+        font-size: 15px;
+      }
+      #file {
+        padding-left: 55px;
+      }
+      #submit {
+        font-size: 20px;
+        padding: 2px;
+        background-color: #fff; 
+        border-radius: 10px;
+      }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript" 
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAiTLqcy-WLIrX0KN9_SOgnDqMIWfAgacM"></script>
+    <script src="GoogleAPILoader.js"></script>
+    <script src="GoogleDriveFileUploader.js"></script>
+
+    <script type="text/javascript">
+      var geocoder;
+      var map;
+      var feetToMeters = 0.3048;
+      var rad = 100;
+      var marker;
+      var circle;
+      var latlng;
+
+      function initialize() {
+        geocoder = new google.maps.Geocoder();
+        latlng = new google.maps.LatLng(40.350327, -74.6526856);
+        var mapOptions = {
+          zoom: 14,
+          center: latlng
+        }
+
+        map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+
+        createMarker();
+      }
+
+      google.maps.event.addDomListener(window, 'load', initialize);
+
+      function codeAddress() {
+        var address = document.getElementById("address").value;
+        geocoder.geocode( { 'address': address}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            latlng = results[0].geometry.location;
+            map.setCenter(latlng);
+            map.setZoom(18);
+            createMarker();
+          } else {
+            alert("Geocode was not successful for the following reason: " + status);
+          }
+        });
+      }
+
+      function createMarker() {
+        marker = new google.maps.Marker({
+          draggable: true,
+          map: map,
+          position: latlng 
+        });
+        drawCircle();
+        google.maps.event.addListener(marker,'dragend',function(event){
+          latlng = this.getPosition();
+          drawCircle();
+        });
+      }
+
+      function drawCircle() {
+        if (circle != null) circle.setMap(null);
+        circle = new google.maps.Circle({
+          strokeColor: '#FF0000',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#FF0000',
+          fillOpacity: 0.35,
+          map: map,
+          center: latlng,
+          radius: rad * feetToMeters
+        });
+      }
+
+      function uploadFile() {
+        var field = document.getElementById("file");
+        if (field.files.length > 0) {
+          var file = field.files[0];
+          var name = file.name;
+          /* submit post request or whatever, with:
+              User data
+              Lat
+              Lon
+              Name (in place of Drive link)
+           */
+        }
+      }
+
+      function success() {
+        alert("yay");
+      }
+    </script>
+  </head>
+
+  <body onload="initialize()">
+    <div class="form" id="loc-entry">
+      <h3>Enter address or location:</h3>
+      <h6>(or drag the pinned location)</h6>
+      <form action="javascript:codeAddress()">
+        <input id="address" type="textbox">
+      </form>
+    </div>
+    <div class="form" id="file-entry">
+      <h3>Upload file:</h3>
+      <input id="file" type="file"/>
+    </div>
+    <div class="form" id="upload">
+      <button onclick="uploadFile()">PHILL LOCATION</button>
+    </div id="upload">
+    <div id="map-canvas"></div>
+  </body>
+
+</html>
